@@ -1,0 +1,31 @@
+{
+  "categories": {
+    "environment.themeFontWeight": {
+      "title": "Theme Font Weight",
+      "description": "Independent code editor font weights for light and dark themes.",
+      "additionalKeywords": [ "font", "weight", "light", "dark", "editor" ]
+    }
+  },
+  "properties": {
+    "environment.themeFontWeight.lightTheme": {
+      "type": "string",
+      "default": "normal",
+      "enum": [ "thin", "extraLight", "light", "normal", "medium", "semiBold", "bold", "extraBold", "black" ],
+      "enumItemLabels": [ "Thin", "Extra Light", "Light", "Normal", "Medium", "Semi Bold", "Bold", "Extra Bold", "Black" ],
+      "title": "Light theme font weight",
+      "description": "Base code editor font weight for themes with a light background.",
+      "order": 0,
+      "additionalKeywords": [ "font", "weight", "light", "editor" ]
+    },
+    "environment.themeFontWeight.darkTheme": {
+      "type": "string",
+      "default": "normal",
+      "enum": [ "thin", "extraLight", "light", "normal", "medium", "semiBold", "bold", "extraBold", "black" ],
+      "enumItemLabels": [ "Thin", "Extra Light", "Light", "Normal", "Medium", "Semi Bold", "Bold", "Extra Bold", "Black" ],
+      "title": "Dark theme font weight",
+      "description": "Base code editor font weight for themes with a dark background.",
+      "order": 1,
+      "additionalKeywords": [ "font", "weight", "dark", "editor" ]
+    }
+  }
+}

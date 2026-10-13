@@ -16,6 +16,23 @@ type WeightSettings =
       Dark: EditorFontWeight }
 
 module Policy =
+    [<Literal>]
+    let LightSetting = "environment.themeFontWeight.lightTheme"
+
+    [<Literal>]
+    let DarkSetting = "environment.themeFontWeight.darkTheme"
+
+    let weights =
+        [ "thin", EditorFontWeight.Thin
+          "extraLight", EditorFontWeight.ExtraLight
+          "light", EditorFontWeight.Light
+          "normal", EditorFontWeight.Normal
+          "medium", EditorFontWeight.Medium
+          "semiBold", EditorFontWeight.SemiBold
+          "bold", EditorFontWeight.Bold
+          "extraBold", EditorFontWeight.ExtraBold
+          "black", EditorFontWeight.Black ]
+
     let defaults =
         { Light = EditorFontWeight.Normal
           Dark = EditorFontWeight.Normal }
@@ -30,3 +47,8 @@ module Policy =
 
     let isValidWeight weight =
         System.Enum.IsDefined(typeof<EditorFontWeight>, weight)
+
+    let parseWeight value =
+        match weights |> List.tryFind (fun (name, _) -> name = value) with
+        | Some(_, weight) -> Ok weight
+        | None -> Error $"Unsupported font weight '{value}'."

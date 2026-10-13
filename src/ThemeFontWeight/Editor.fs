@@ -2,55 +2,95 @@ namespace ThemeFontWeight
 
 open System
 open System.ComponentModel.Composition
+open System.Threading.Tasks
 open System.Windows
-open System.Windows.Media
 open System.Windows.Threading
-open Microsoft.VisualStudio
 open Microsoft.VisualStudio.PlatformUI
 open Microsoft.VisualStudio.Shell
-open Microsoft.VisualStudio.Shell.Interop
 open Microsoft.VisualStudio.Text.Classification
 open Microsoft.VisualStudio.Text.Editor
+open Microsoft.VisualStudio.Threading
 open Microsoft.VisualStudio.Utilities
+open Microsoft.VisualStudio.Utilities.UnifiedSettings
 
-type internal ViewWeightController(view: IWpfTextView, formatMap: IClassificationFormatMap) =
+type internal ViewWeightController(view: IWpfTextView, formatMap: IClassificationFormatMap, reader: ISettingsReader) =
     let dispatcher = view.VisualElement.Dispatcher
     let mutable pending = false
     let mutable applying = false
+    let mutable reportedMissingClassification = false
 
     let apply () =
         if not view.IsClosed then
-            let background = VSColorTheme.GetThemedColor(EnvironmentColors.ToolWindowBackgroundColorKey)
-            let isDark = Policy.isDarkBackground background.R background.G background.B
-            let weight = Settings.get() |> Policy.selectWeight isDark |> int |> FontWeight.FromOpenTypeWeight
-            let properties = formatMap.DefaultTextProperties
+            match Settings.read reader with
+            | Error message -> ActivityLog.LogError("Theme Font Weight", message) |> ignore
+            | Ok settings ->
+                let background = VSColorTheme.GetThemedColor(EnvironmentColors.ToolWindowBackgroundColorKey)
+                let isDark = Policy.isDarkBackground background.R background.G background.B
+                let weight = settings |> Policy.selectWeight isDark |> int |> FontWeight.FromOpenTypeWeight
+                let originalDefault = formatMap.DefaultTextProperties
+                let weightedDefault = FontFormatting.withWeight weight originalDefault
+                let classificationChanges =
+                    formatMap.CurrentPriorityOrder
+                    |> Seq.choose (fun classification ->
+                        if isNull classification then
+                            if not reportedMissingClassification then
+                                reportedMissingClassification <- true
+                                ActivityLog.LogWarning(
+                                    "Theme Font Weight",
+                                    "Skipping format definitions whose classification types are not registered in this VS instance."
+                                ) |> ignore
 
-            if properties.Typeface.Weight <> weight then
-                applying <- true
+                            None
+                        else
+                            let original = formatMap.GetExplicitTextProperties classification
+                            let weighted = FontFormatting.forClassification weight original
+                            if obj.ReferenceEquals(original, weighted) then None else Some(classification, weighted))
+                    |> Seq.toList
 
-                try
-                    let original = properties.Typeface
-                    let typeface = Typeface(original.FontFamily, original.Style, weight, original.Stretch)
-                    formatMap.DefaultTextProperties <- properties.SetTypeface typeface
-                finally
-                    applying <- false
+                if not (obj.ReferenceEquals(originalDefault, weightedDefault)) || not classificationChanges.IsEmpty then
+                    applying <- true
+
+                    try
+                        formatMap.BeginBatchUpdate()
+
+                        try
+                            formatMap.DefaultTextProperties <- weightedDefault
+
+                            for classification, properties in classificationChanges do
+                                formatMap.SetExplicitTextProperties(classification, properties)
+                        finally
+                            formatMap.EndBatchUpdate()
+                    finally
+                        applying <- false
 
     let requestApply () =
-        // VS rebuilds the format map during theme changes; apply after that rebuild.
-        if not pending && not view.IsClosed then
-            pending <- true
+        let schedule () =
+            // VS rebuilds the format map during theme changes; apply after that rebuild.
+            if not pending && not view.IsClosed && not dispatcher.HasShutdownStarted then
+                pending <- true
 
-            dispatcher.BeginInvoke(
-                DispatcherPriority.Background,
-                Action(fun () ->
-                    pending <- false
-                    apply())
-            )
-            |> ignore
+                dispatcher.BeginInvoke(
+                    DispatcherPriority.Background,
+                    Action(fun () ->
+                        pending <- false
+                        ThreadHelper.JoinableTaskFactory.RunAsync(
+                            Func<Task>(fun () -> task { apply() } :> Task)
+                        ).FileAndForget("ThemeFontWeight/ApplyWeight"))
+                )
+                |> ignore
+
+        if dispatcher.CheckAccess() then
+            schedule()
+        elif not view.IsClosed && not dispatcher.HasShutdownStarted then
+            dispatcher.BeginInvoke(Action schedule) |> ignore
 
     let themeChanged = ThemeChangedEventHandler(fun _ -> requestApply())
     let mappingChanged = EventHandler<EventArgs>(fun _ _ -> if not applying then requestApply())
-    let settingsChanged = Settings.Changed.Subscribe(fun () -> requestApply())
+    let settingsChanged =
+        reader.SubscribeToChanges(
+            Action<SettingsUpdate>(fun _ -> requestApply()),
+            [| Policy.LightSetting; Policy.DarkSetting |]
+        )
 
     do
         VSColorTheme.add_ThemeChanged themeChanged
@@ -70,16 +110,22 @@ type FontWeightViewListener
     [<ImportingConstructor>]
     (
         formatMapService: IClassificationFormatMapService,
-        [<Import(typeof<SVsServiceProvider>)>] serviceProvider: IServiceProvider
+        settingsService: SettingsService
     ) =
 
     interface IWpfTextViewCreationListener with
         member _.TextViewCreated view =
             ThreadHelper.ThrowIfNotOnUIThread()
-            let shell = serviceProvider.GetService(typeof<SVsShell>) :?> IVsShell
-            let mutable packageGuid = Guid PackageIdentity.Guid
-            let mutable package = Unchecked.defaultof<IVsPackage>
-            ErrorHandler.ThrowOnFailure(shell.LoadPackage(&packageGuid, &package)) |> ignore
+            ThreadHelper.JoinableTaskFactory.RunAsync(
+                Func<Task>(fun () ->
+                    task {
+                        let! reader = settingsService.GetReaderAsync()
+                        do! ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync()
 
-            let controller = new ViewWeightController(view, formatMapService.GetClassificationFormatMap view)
-            view.Closed.Add(fun _ -> (controller :> IDisposable).Dispose())
+                        if not view.IsClosed then
+                            let controller =
+                                new ViewWeightController(view, formatMapService.GetClassificationFormatMap view, reader)
+
+                            view.Closed.Add(fun _ -> (controller :> IDisposable).Dispose())
+                    } :> Task)
+            ).FileAndForget("ThemeFontWeight/InitializeEditor")

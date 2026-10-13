@@ -1,53 +1,95 @@
 # Theme Font Weight
 
 A Visual Studio VSIX written entirely in F#. Choose independent **code editor
-font weights** for light and dark themes at **Tools > Options > Theme Font
-Weight > General**. Settings persist in Visual Studio and changes apply to open
-document editors without a restart.
+font weights** for light and dark themes in the modern **Tools > Options**
+window. Search for **Theme Font Weight**, or browse **Environment > Theme Font
+Weight** under All Settings. Both controls are native Unified Settings dropdowns,
+not a classic property-grid options page. Settings persist in Visual Studio and
+changes apply to open document editors without a restart.
 
 Both settings initially use Normal. Available weights range from Thin to Black.
 The extension changes only the editor's base font weight, not the font family,
-size, colors, or the Visual Studio UI. Explicit syntax-classification font
-overrides (such as bold keywords) remain under Fonts and Colors control. The
+size, colors, or the Visual Studio UI. Explicit syntax bolding (such as bold
+keywords) remains under Fonts and Colors control. Normal-weight classification
+overrides inherit the selected theme weight instead of forcing weight 400. The
 selected font must support the desired weight; WPF may choose the nearest face
 or synthesize a weight.
 
-Theme selection follows `dotnet/fsharp`'s editor: the brightness of the themed
-tool-window background determines light versus dark. This also handles Blue,
-custom, and high-contrast themes rather than hard-coding theme IDs.
+The brightness of the themed tool-window background determines light versus
+dark. This handles custom and high-contrast themes rather than hard-coding theme
+IDs.
 
 ## Build and install
 
-Requires Windows and the .NET 8 SDK. Targets .NET Framework 4.7.2 and Visual
-Studio 2022/2026 (64-bit), including **VS 2026 Insiders**. No C# bridge or XAML
-code-behind is used.
+Requires Windows and the .NET 10 SDK. Targets .NET Framework 4.8 (the in-process
+VS host) and **Visual Studio 2026**, including **Insiders**, on x64. The current
+public VS SDK and VSSDK 18 build tools generate the VSIX and package registration
+directly from the F# assembly. No C# bridge or source generator is used.
 
 ```powershell
-dotnet build .\src\ThemeFontWeight\ThemeFontWeight.fsproj -c Release
+dotnet build .\ThemeFontWeight.sln -c Release
 dotnet run --project .\tests\ThemeFontWeight.Tests -c Release
+.\tests\ThemeFontWeight.Formatting.Tests\bin\Release\net48\ThemeFontWeight.Formatting.Tests.exe
 ```
 
-Install `src\ThemeFontWeight\bin\Release\net472\ThemeFontWeight.vsix` using the
+Install `src\ThemeFontWeight\bin\Release\net48\ThemeFontWeight.vsix` using the
 VSIX installer, then restart Visual Studio. Uninstall through **Extensions >
 Manage Extensions** to return to Visual Studio's normal font-weight behavior.
 Select your Insiders installation in the installer if you have multiple VS
-instances. The options page is a classic `DialogPage`, not a unified-settings
-provider.
+instances.
 
-To locate an Insiders installation from scripts, include `-prerelease` when
-calling `vswhere.exe`. To debug without changing your main VS profile, use an
-experimental instance (`devenv.exe /RootSuffix Exp`) and install the extension
-there rather than in your normal instance.
+## Experimental instance and debugging
+
+Open `ThemeFontWeight.sln` in VS 2026 Insiders, choose the extension project as
+the startup project, and press F5. Builds inside VS deploy to the **Exp** profile
+and launch `devenv.exe /RootSuffix Exp /Log`. Command-line `dotnet build` produces
+a VSIX without installing it.
+
+Alternatively, close the experimental instance and run:
+
+```powershell
+.\Deploy-Experimental.ps1 -Launch
+```
+
+The script discovers VS 2026 installations including Insiders, uses the native
+VSIX installer to install into Exp, then runs `/UpdateConfiguration` to merge
+package and Unified Settings registrations. It leaves normal VS profiles
+untouched and refuses to deploy while Exp is running. F5 uses this same
+installation path after building, rather than SDK raw-copy deployment, which
+does not reliably register a new extension in the VS 2026 extension cache.
+Installing a VSIX into
+your normal profile does **not** install it into Exp, and launching Exp alone
+does **not** deploy an extension.
 
 ## Implementation
 
-The structure follows the F# MEF exports and theme-change handlers in
-[`dotnet/fsharp`](https://github.com/dotnet/fsharp/tree/main/vsintegration/src/FSharp.Editor).
-An F# `Package` supplies a persisted `DialogPage`; an F# MEF
-`IWpfTextViewCreationListener` loads it when the first document view opens.
-Per-view classification format maps are updated on theme, settings, and format
-mapping changes, and event handlers are removed when views close.
+`registration.json` declares a searchable Unified Settings category, validated
+enum values, defaults, labels, and descriptions. `ProvideSettingsManifest` on an
+F# `AsyncPackage` generates the manifest registration automatically at build
+time. The settings UI does not require loading the package or opening a document.
 
-Package/options registration lives in a checked-in `.pkgdef`, following the
-explicit registration approach used by the F# tools' VSIX. The VS SDK build
-tools produce the VSIX; the only bundled runtime dependency is FSharp.Core.
+An F# MEF `IWpfTextViewCreationListener` acquires the native Unified Settings
+service asynchronously. It reads effective values through `ISettingsReader`
+and subscribes to live setting changes. There is no synchronous `LoadPackage`
+call, duplicated settings store, or custom mutable settings singleton.
+
+In-process `IClassificationFormatMap` remains necessary for changing the WPF
+editor's base typeface. Both the default properties and classification-specific
+regular-weight overrides are updated: VS's `IsBold=false` flag forces weight 400
+and would otherwise discard a weighted typeface during the formatting merge.
+Explicit bold is preserved, and all changes are batched. Per-view maps update on theme, settings, and format-map
+changes, with UI-thread marshaling and subscription cleanup when views close.
+Settings retrieval errors go to the VS Activity Log without replacing them with
+success-shaped defaults.
+
+The public `ISettingsManager` API documents the Unified Settings service, but
+its marker type is only in VS's internal interop assembly. A GUID-only local
+service marker requests that service without referencing internal assemblies.
+
+### API references
+
+- [Unified Settings registration (`ProvideSettingsManifest`)](https://learn.microsoft.com/dotnet/api/microsoft.visualstudio.shell.providesettingsmanifestattribute)
+- [Native Unified Settings manager](https://learn.microsoft.com/dotnet/api/microsoft.visualstudio.utilities.unifiedsettings.isettingsmanager)
+- [Effective values and change subscriptions (`ISettingsReader`)](https://learn.microsoft.com/dotnet/api/microsoft.visualstudio.utilities.unifiedsettings.isettingsreader)
+- [Production Unified Settings registration in Roslyn/Razor](https://github.com/dotnet/roslyn/blob/main/src/Razor/src/Razor/src/Microsoft.VisualStudio.RazorExtension/UnifiedSettings/razor.registration.json)
+- [VSSDK-compatible modern extensibility and in-process APIs](https://learn.microsoft.com/visualstudio/extensibility/visualstudio.extensibility/get-started/in-proc-extensions)

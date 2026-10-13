@@ -1,39 +1,51 @@
 <Project>
   <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" />
   <PropertyGroup>
-    <TargetFramework>net472</TargetFramework>
+    <TargetFramework>net48</TargetFramework>
     <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
     <UseWPF>true</UseWPF>
-    <UseWindowsForms>true</UseWindowsForms>
-    <GeneratePkgDefFile>false</GeneratePkgDefFile>
+    <GeneratePkgDefFile>true</GeneratePkgDefFile>
+    <UseCodebase>true</UseCodebase>
     <IncludeAssemblyInVSIXContainer>true</IncludeAssemblyInVSIXContainer>
     <IncludeDebugSymbolsInVSIXContainer>false</IncludeDebugSymbolsInVSIXContainer>
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
     <VsixType>v3</VsixType>
     <DeployExtension>false</DeployExtension>
-    <Version>0.1.0</Version>
+    <DeployExperimentalOnBuild Condition="'$(BuildingInsideVisualStudio)' == 'true'">true</DeployExperimentalOnBuild>
+    <StartAction>Program</StartAction>
+    <StartProgram>$(DevEnvDir)devenv.exe</StartProgram>
+    <StartArguments>/RootSuffix Exp /Log</StartArguments>
+    <TargetVSVersion>18.0</TargetVSVersion>
+    <VSSDKTargetPlatformRegRootSuffix>Exp</VSSDKTargetPlatformRegRootSuffix>
+    <Version>0.2.0</Version>
     <Description>Independent code editor font weights for light and dark Visual Studio themes.</Description>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Policy.fs" />
-    <Compile Include="Options.fs" />
+    <Compile Include="FontFormatting.fs" />
+    <Compile Include="Settings.fs" />
     <Compile Include="Package.fs" />
     <Compile Include="Editor.fs" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="all" />
     <PackageReference Include="Microsoft.VisualStudio.SDK" Version="17.14.40265" ExcludeAssets="runtime" />
-    <PackageReference Include="Microsoft.VSSDK.BuildTools" Version="17.14.2142" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.VSSDK.BuildTools" Version="18.9.820" PrivateAssets="all" />
     <Reference Include="System.ComponentModel.Composition" />
+    <Reference Include="System.Windows.Forms" />
   </ItemGroup>
   <ItemGroup>
     <None Include="source.extension.vsixmanifest">
       <SubType>Designer</SubType>
     </None>
-    <Content Include="ThemeFontWeight.pkgdef">
+    <Content Include="registration.json">
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
   </ItemGroup>
   <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
   <Import Project="$(VSToolsPath)\VSSDK\Microsoft.VsSDK.targets" />
+  <Target Name="DeployExperimentalExtension" AfterTargets="Build"
+          Condition="'$(DeployExperimentalOnBuild)' == 'true' and '$(DesignTimeBuild)' != 'true'">
+    <Exec Command="powershell.exe -NoProfile -ExecutionPolicy Bypass -File &quot;$(MSBuildProjectDirectory)\..\..\Deploy-Experimental.ps1&quot; -SkipBuild -Configuration &quot;$(Configuration)&quot;" />
+  </Target>
 </Project>

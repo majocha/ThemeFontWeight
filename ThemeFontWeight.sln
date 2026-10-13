@@ -11,26 +11,61 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{C233CD07
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "ThemeFontWeight.Tests", "tests\ThemeFontWeight.Tests\ThemeFontWeight.Tests.fsproj", "{5D38F986-0E71-4399-8589-1CFBFEAF7560}"
 EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "ThemeFontWeight.Formatting.Tests", "tests\ThemeFontWeight.Formatting.Tests\ThemeFontWeight.Formatting.Tests.fsproj", "{28AD0C4E-2EDF-4A8E-AAD9-543DA526B173}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
+		Debug|x64 = Debug|x64
+		Debug|x86 = Debug|x86
 		Release|Any CPU = Release|Any CPU
-	EndGlobalSection
-	GlobalSection(SolutionProperties) = preSolution
-		HideSolutionNode = FALSE
+		Release|x64 = Release|x64
+		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{DBAA8424-5B41-4796-9BDA-C20B0A837C21}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{DBAA8424-5B41-4796-9BDA-C20B0A837C21}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DBAA8424-5B41-4796-9BDA-C20B0A837C21}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{DBAA8424-5B41-4796-9BDA-C20B0A837C21}.Debug|x64.Build.0 = Debug|Any CPU
+		{DBAA8424-5B41-4796-9BDA-C20B0A837C21}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{DBAA8424-5B41-4796-9BDA-C20B0A837C21}.Debug|x86.Build.0 = Debug|Any CPU
 		{DBAA8424-5B41-4796-9BDA-C20B0A837C21}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DBAA8424-5B41-4796-9BDA-C20B0A837C21}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DBAA8424-5B41-4796-9BDA-C20B0A837C21}.Release|x64.ActiveCfg = Release|Any CPU
+		{DBAA8424-5B41-4796-9BDA-C20B0A837C21}.Release|x64.Build.0 = Release|Any CPU
+		{DBAA8424-5B41-4796-9BDA-C20B0A837C21}.Release|x86.ActiveCfg = Release|Any CPU
+		{DBAA8424-5B41-4796-9BDA-C20B0A837C21}.Release|x86.Build.0 = Release|Any CPU
 		{5D38F986-0E71-4399-8589-1CFBFEAF7560}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{5D38F986-0E71-4399-8589-1CFBFEAF7560}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5D38F986-0E71-4399-8589-1CFBFEAF7560}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{5D38F986-0E71-4399-8589-1CFBFEAF7560}.Debug|x64.Build.0 = Debug|Any CPU
+		{5D38F986-0E71-4399-8589-1CFBFEAF7560}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{5D38F986-0E71-4399-8589-1CFBFEAF7560}.Debug|x86.Build.0 = Debug|Any CPU
 		{5D38F986-0E71-4399-8589-1CFBFEAF7560}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5D38F986-0E71-4399-8589-1CFBFEAF7560}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5D38F986-0E71-4399-8589-1CFBFEAF7560}.Release|x64.ActiveCfg = Release|Any CPU
+		{5D38F986-0E71-4399-8589-1CFBFEAF7560}.Release|x64.Build.0 = Release|Any CPU
+		{5D38F986-0E71-4399-8589-1CFBFEAF7560}.Release|x86.ActiveCfg = Release|Any CPU
+		{5D38F986-0E71-4399-8589-1CFBFEAF7560}.Release|x86.Build.0 = Release|Any CPU
+		{28AD0C4E-2EDF-4A8E-AAD9-543DA526B173}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{28AD0C4E-2EDF-4A8E-AAD9-543DA526B173}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{28AD0C4E-2EDF-4A8E-AAD9-543DA526B173}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{28AD0C4E-2EDF-4A8E-AAD9-543DA526B173}.Debug|x64.Build.0 = Debug|Any CPU
+		{28AD0C4E-2EDF-4A8E-AAD9-543DA526B173}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{28AD0C4E-2EDF-4A8E-AAD9-543DA526B173}.Debug|x86.Build.0 = Debug|Any CPU
+		{28AD0C4E-2EDF-4A8E-AAD9-543DA526B173}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{28AD0C4E-2EDF-4A8E-AAD9-543DA526B173}.Release|Any CPU.Build.0 = Release|Any CPU
+		{28AD0C4E-2EDF-4A8E-AAD9-543DA526B173}.Release|x64.ActiveCfg = Release|Any CPU
+		{28AD0C4E-2EDF-4A8E-AAD9-543DA526B173}.Release|x64.Build.0 = Release|Any CPU
+		{28AD0C4E-2EDF-4A8E-AAD9-543DA526B173}.Release|x86.ActiveCfg = Release|Any CPU
+		{28AD0C4E-2EDF-4A8E-AAD9-543DA526B173}.Release|x86.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{DBAA8424-5B41-4796-9BDA-C20B0A837C21} = {0AE4C341-C7A8-49ED-B1C0-D804FF9FB741}
 		{5D38F986-0E71-4399-8589-1CFBFEAF7560} = {C233CD07-2E4E-4C05-802E-FA47809C6C24}
+		{28AD0C4E-2EDF-4A8E-AAD9-543DA526B173} = {C233CD07-2E4E-4C05-802E-FA47809C6C24}
 	EndGlobalSection
 EndGlobal
