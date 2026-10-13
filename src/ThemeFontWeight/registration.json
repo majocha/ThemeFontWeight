@@ -2,7 +2,7 @@
   "categories": {
     "environment.themeFontWeight": {
       "title": "Theme Font Weight",
-      "description": "Independent code editor font weights for light and dark themes.",
+      "description": "Shift editor and classification weights together for light and dark themes, retaining bold and italic distinctions.",
       "additionalKeywords": [ "font", "weight", "light", "dark", "editor" ]
     }
   },
@@ -13,7 +13,7 @@
       "enum": [ "thin", "extraLight", "light", "normal", "medium", "semiBold", "bold", "extraBold", "black" ],
       "enumItemLabels": [ "Thin", "Extra Light", "Light", "Normal", "Medium", "Semi Bold", "Bold", "Extra Bold", "Black" ],
       "title": "Light theme font weight",
-      "description": "Base code editor font weight for themes with a light background.",
+      "description": "Relative weight shift for light themes. Light shifts regular 400 to 300 and bold 700 to 600. Other formatting is retained.",
       "order": 0,
       "additionalKeywords": [ "font", "weight", "light", "editor" ]
     },
@@ -23,7 +23,7 @@
       "enum": [ "thin", "extraLight", "light", "normal", "medium", "semiBold", "bold", "extraBold", "black" ],
       "enumItemLabels": [ "Thin", "Extra Light", "Light", "Normal", "Medium", "Semi Bold", "Bold", "Extra Bold", "Black" ],
       "title": "Dark theme font weight",
-      "description": "Base code editor font weight for themes with a dark background.",
+      "description": "Relative weight shift for dark themes. Light shifts regular 400 to 300 and bold 700 to 600. Other formatting is retained.",
       "order": 1,
       "additionalKeywords": [ "font", "weight", "dark", "editor" ]
     }

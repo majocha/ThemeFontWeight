@@ -1,6 +1,7 @@
 namespace ThemeFontWeight
 
 open System
+open System.Collections.Generic
 open System.ComponentModel.Composition
 open System.Threading.Tasks
 open System.Windows
@@ -18,6 +19,8 @@ type internal ViewWeightController(view: IWpfTextView, formatMap: IClassificatio
     let mutable pending = false
     let mutable applying = false
     let mutable reportedMissingClassification = false
+    let baselineDefault = FormatBaseline(formatMap.DefaultTextProperties, formatMap.DefaultTextProperties)
+    let classificationBaselines = Dictionary<IClassificationType, FormatBaseline>()
 
     let apply () =
         if not view.IsClosed then
@@ -27,8 +30,13 @@ type internal ViewWeightController(view: IWpfTextView, formatMap: IClassificatio
                 let background = VSColorTheme.GetThemedColor(EnvironmentColors.ToolWindowBackgroundColorKey)
                 let isDark = Policy.isDarkBackground background.R background.G background.B
                 let weight = settings |> Policy.selectWeight isDark |> int |> FontWeight.FromOpenTypeWeight
-                let originalDefault = formatMap.DefaultTextProperties
-                let weightedDefault = FontFormatting.withWeight weight originalDefault
+                let currentDefault = formatMap.DefaultTextProperties
+
+                if not (obj.ReferenceEquals(currentDefault, baselineDefault.Applied)) then
+                    baselineDefault.Original <-
+                        FontFormatting.restoreOwnedWeight baselineDefault.Original baselineDefault.Applied currentDefault
+
+                let weightedDefault = FontFormatting.shiftDefault weight baselineDefault.Original
                 let classificationChanges =
                     formatMap.CurrentPriorityOrder
                     |> Seq.choose (fun classification ->
@@ -42,12 +50,48 @@ type internal ViewWeightController(view: IWpfTextView, formatMap: IClassificatio
 
                             None
                         else
-                            let original = formatMap.GetExplicitTextProperties classification
-                            let weighted = FontFormatting.forClassification weight original
-                            if obj.ReferenceEquals(original, weighted) then None else Some(classification, weighted))
+                            let current = formatMap.GetExplicitTextProperties classification
+                            let baseline =
+                                match classificationBaselines.TryGetValue classification with
+                                | true, baseline ->
+                                    if not (obj.ReferenceEquals(current, baseline.Applied)) then
+                                        let original =
+                                            FontFormatting.restoreOwnedWeight baseline.Original baseline.Applied current
+
+                                        if not original.TypefaceEmpty || not original.BoldEmpty then
+                                            let typeface =
+                                                if original.TypefaceEmpty then baselineDefault.Original.Typeface
+                                                else original.Typeface
+
+                                            let originalWeight =
+                                                if original.BoldEmpty then typeface.Weight
+                                                elif original.Bold then FontWeights.Bold
+                                                else FontWeights.Normal
+
+                                            baseline.Effective <-
+                                                original.SetTypeface(
+                                                    System.Windows.Media.Typeface(
+                                                        typeface.FontFamily, typeface.Style, originalWeight,
+                                                        typeface.Stretch
+                                                    )
+                                                )
+
+                                        baseline.Original <- original
+
+                                    baseline
+                                | false, _ ->
+                                    let baseline = FormatBaseline(current, formatMap.GetTextProperties classification)
+                                    classificationBaselines.Add(classification, baseline)
+                                    baseline
+
+                            let weighted = FontFormatting.shiftClassification weight baseline.Effective baseline.Original
+                            baseline.Applied <- weighted
+                            if obj.ReferenceEquals(current, weighted) then None else Some(classification, weighted))
                     |> Seq.toList
 
-                if not (obj.ReferenceEquals(originalDefault, weightedDefault)) || not classificationChanges.IsEmpty then
+                baselineDefault.Applied <- weightedDefault
+
+                if not (obj.ReferenceEquals(currentDefault, weightedDefault)) || not classificationChanges.IsEmpty then
                     applying <- true
 
                     try

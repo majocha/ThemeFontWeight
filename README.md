@@ -8,10 +8,17 @@ not a classic property-grid options page. Settings persist in Visual Studio and
 changes apply to open document editors without a restart.
 
 Both settings initially use Normal. Available weights range from Thin to Black.
-The extension changes only the editor's base font weight, not the font family,
-size, colors, or the Visual Studio UI. Explicit syntax bolding (such as bold
-keywords) remains under Fonts and Colors control. Normal-weight classification
-overrides inherit the selected theme weight instead of forcing weight 400. The
+The selected weight is a **relative shift** from Normal (400), applied to the
+original editor and classification weights. For example, Light (300) changes
+regular text from 400 to 300 and bold text from 700 to 600. Thin (100) changes
+regular text to 100 and bold text to 400. Custom classification weights shift
+by the same amount, clamped to 100-900; distinctions may converge at those limits.
+Normal restores the original weights.
+
+Font family, size, colors, italic styles, underlines, and other classification
+formatting remain unchanged. Updates use original formatting baselines, not
+previously adjusted weights, so changing settings repeatedly cannot compound
+the shift. The
 selected font must support the desired weight; WPF may choose the nearest face
 or synthesize a weight.
 
@@ -74,10 +81,13 @@ and subscribes to live setting changes. There is no synchronous `LoadPackage`
 call, duplicated settings store, or custom mutable settings singleton.
 
 In-process `IClassificationFormatMap` remains necessary for changing the WPF
-editor's base typeface. Both the default properties and classification-specific
-regular-weight overrides are updated: VS's `IsBold=false` flag forces weight 400
-and would otherwise discard a weighted typeface during the formatting merge.
-Explicit bold is preserved, and all changes are batched. Per-view maps update on theme, settings, and format-map
+editor's typefaces. Default and classification-specific weights are shifted from
+their original values: VS's `IsBold` flags force weight 400 or 700 and would
+otherwise discard relative weights during the formatting merge. Those flags are
+represented by explicitly weighted typefaces without changing italic flags or
+other properties. Per-view baselines retain the original bold distinction and
+are refreshed when VS or another extension changes formatting. All changes are
+batched. Per-view maps update on theme, settings, and format-map
 changes, with UI-thread marshaling and subscription cleanup when views close.
 Settings retrieval errors go to the VS Activity Log without replacing them with
 success-shaped defaults.
