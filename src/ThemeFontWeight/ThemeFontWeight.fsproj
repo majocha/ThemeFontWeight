@@ -44,6 +44,10 @@
   </ItemGroup>
   <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
   <Import Project="$(VSToolsPath)\VSSDK\Microsoft.VsSDK.targets" />
+  <!-- VSSDK build tools unconditionally declare the CSharp capability, which makes VS use the C# language service for this F# project. -->
+  <ItemGroup>
+    <ProjectCapability Remove="CSharp" />
+  </ItemGroup>
   <Target Name="DeployExperimentalExtension" AfterTargets="Build"
           Condition="'$(DeployExperimentalOnBuild)' == 'true' and '$(DesignTimeBuild)' != 'true'">
     <Exec Command="powershell.exe -NoProfile -ExecutionPolicy Bypass -File &quot;$(MSBuildProjectDirectory)\..\..\Deploy-Experimental.ps1&quot; -SkipBuild -Configuration &quot;$(Configuration)&quot;" />
