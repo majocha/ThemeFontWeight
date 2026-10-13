@@ -85,9 +85,9 @@ editor's typefaces. Default and classification-specific weights are shifted from
 their original values: VS's `IsBold` flags force weight 400 or 700 and would
 otherwise discard relative weights during the formatting merge. Those flags are
 represented by explicitly weighted typefaces without changing italic flags or
-other properties. Per-view baselines retain the original bold distinction and
-are refreshed when VS or another extension changes formatting. All changes are
-batched. Per-view maps update on theme, settings, and format-map
+Baselines are captured once per format map, shared by all views using it, and
+retain the original bold distinction. They are refreshed when VS or another
+extension changes formatting. All changes are batched. Per-view maps update
 changes, with UI-thread marshaling and subscription cleanup when views close.
 Settings retrieval errors go to the VS Activity Log without replacing them with
 success-shaped defaults.

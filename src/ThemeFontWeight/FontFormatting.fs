@@ -31,16 +31,23 @@ module FontFormatting =
         else
             withTypefaceWeight (relativeWeight selected effective.Typeface.Weight) effective.Typeface properties
 
+    let private sameTypeface (a: Typeface) (b: Typeface) =
+        a.FontFamily.Equals b.FontFamily && a.Style = b.Style && a.Weight = b.Weight && a.Stretch = b.Stretch
+
+    // VS returns new property objects on every read, so reference equality cannot detect changes.
+    let sameWeightFormat (a: TextFormattingRunProperties) (b: TextFormattingRunProperties) =
+        a.TypefaceEmpty = b.TypefaceEmpty
+        && (a.TypefaceEmpty || sameTypeface a.Typeface b.Typeface)
+        && a.BoldEmpty = b.BoldEmpty
+        && (a.BoldEmpty || a.Bold = b.Bold)
+
     let restoreOwnedWeight
         (original: TextFormattingRunProperties)
         (applied: TextFormattingRunProperties)
         (current: TextFormattingRunProperties)
         =
         // Other extensions may update colors while retaining our weighted typeface.
-        if current.TypefaceEmpty = applied.TypefaceEmpty
-           && (current.TypefaceEmpty || current.Typeface.Equals applied.Typeface)
-           && current.BoldEmpty = applied.BoldEmpty
-           && (current.BoldEmpty || current.Bold = applied.Bold) then
+        if sameWeightFormat current applied then
             let restored =
                 if original.TypefaceEmpty then current.ClearTypeface()
                 else current.SetTypeface original.Typeface

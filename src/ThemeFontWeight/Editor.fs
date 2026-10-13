@@ -3,6 +3,7 @@ namespace ThemeFontWeight
 open System
 open System.Collections.Generic
 open System.ComponentModel.Composition
+open System.Runtime.CompilerServices
 open System.Threading.Tasks
 open System.Windows
 open System.Windows.Threading
@@ -14,13 +15,27 @@ open Microsoft.VisualStudio.Threading
 open Microsoft.VisualStudio.Utilities
 open Microsoft.VisualStudio.Utilities.UnifiedSettings
 
+// Views of the same appearance category share one underlying format map. The original-format
+// baselines must be shared too, otherwise a view opened later would treat the already weighted
+// formats as original and shift them again.
+type internal FormatMapState(formatMap: IClassificationFormatMap) =
+    member val BaselineDefault = FormatBaseline(formatMap.DefaultTextProperties, formatMap.DefaultTextProperties)
+    member val ClassificationBaselines = Dictionary<IClassificationType, FormatBaseline>()
+    member val ReportedMissingClassification = false with get, set
+
+module internal FormatMapStates =
+    let private states = ConditionalWeakTable<IClassificationFormatMap, FormatMapState>()
+
+    let get (formatMap: IClassificationFormatMap) =
+        states.GetValue(formatMap, ConditionalWeakTable<_, _>.CreateValueCallback(fun map -> FormatMapState map))
+
 type internal ViewWeightController(view: IWpfTextView, formatMap: IClassificationFormatMap, reader: ISettingsReader) =
     let dispatcher = view.VisualElement.Dispatcher
     let mutable pending = false
     let mutable applying = false
-    let mutable reportedMissingClassification = false
-    let baselineDefault = FormatBaseline(formatMap.DefaultTextProperties, formatMap.DefaultTextProperties)
-    let classificationBaselines = Dictionary<IClassificationType, FormatBaseline>()
+    let state = FormatMapStates.get formatMap
+    let baselineDefault = state.BaselineDefault
+    let classificationBaselines = state.ClassificationBaselines
 
     let apply () =
         if not view.IsClosed then
@@ -32,17 +47,16 @@ type internal ViewWeightController(view: IWpfTextView, formatMap: IClassificatio
                 let weight = settings |> Policy.selectWeight isDark |> int |> FontWeight.FromOpenTypeWeight
                 let currentDefault = formatMap.DefaultTextProperties
 
-                if not (obj.ReferenceEquals(currentDefault, baselineDefault.Applied)) then
-                    baselineDefault.Original <-
-                        FontFormatting.restoreOwnedWeight baselineDefault.Original baselineDefault.Applied currentDefault
+                baselineDefault.Original <-
+                    FontFormatting.restoreOwnedWeight baselineDefault.Original baselineDefault.Applied currentDefault
 
                 let weightedDefault = FontFormatting.shiftDefault weight baselineDefault.Original
                 let classificationChanges =
                     formatMap.CurrentPriorityOrder
                     |> Seq.choose (fun classification ->
                         if isNull classification then
-                            if not reportedMissingClassification then
-                                reportedMissingClassification <- true
+                            if not state.ReportedMissingClassification then
+                                state.ReportedMissingClassification <- true
                                 ActivityLog.LogWarning(
                                     "Theme Font Weight",
                                     "Skipping format definitions whose classification types are not registered in this VS instance."
@@ -54,29 +68,28 @@ type internal ViewWeightController(view: IWpfTextView, formatMap: IClassificatio
                             let baseline =
                                 match classificationBaselines.TryGetValue classification with
                                 | true, baseline ->
-                                    if not (obj.ReferenceEquals(current, baseline.Applied)) then
-                                        let original =
-                                            FontFormatting.restoreOwnedWeight baseline.Original baseline.Applied current
+                                    let original =
+                                        FontFormatting.restoreOwnedWeight baseline.Original baseline.Applied current
 
-                                        if not original.TypefaceEmpty || not original.BoldEmpty then
-                                            let typeface =
-                                                if original.TypefaceEmpty then baselineDefault.Original.Typeface
-                                                else original.Typeface
+                                    if not original.TypefaceEmpty || not original.BoldEmpty then
+                                        let typeface =
+                                            if original.TypefaceEmpty then baselineDefault.Original.Typeface
+                                            else original.Typeface
 
-                                            let originalWeight =
-                                                if original.BoldEmpty then typeface.Weight
-                                                elif original.Bold then FontWeights.Bold
-                                                else FontWeights.Normal
+                                        let originalWeight =
+                                            if original.BoldEmpty then typeface.Weight
+                                            elif original.Bold then FontWeights.Bold
+                                            else FontWeights.Normal
 
-                                            baseline.Effective <-
-                                                original.SetTypeface(
-                                                    System.Windows.Media.Typeface(
-                                                        typeface.FontFamily, typeface.Style, originalWeight,
-                                                        typeface.Stretch
-                                                    )
+                                        baseline.Effective <-
+                                            original.SetTypeface(
+                                                System.Windows.Media.Typeface(
+                                                    typeface.FontFamily, typeface.Style, originalWeight,
+                                                    typeface.Stretch
                                                 )
+                                            )
 
-                                        baseline.Original <- original
+                                    baseline.Original <- original
 
                                     baseline
                                 | false, _ ->
@@ -86,12 +99,12 @@ type internal ViewWeightController(view: IWpfTextView, formatMap: IClassificatio
 
                             let weighted = FontFormatting.shiftClassification weight baseline.Effective baseline.Original
                             baseline.Applied <- weighted
-                            if obj.ReferenceEquals(current, weighted) then None else Some(classification, weighted))
+                            if FontFormatting.sameWeightFormat current weighted then None else Some(classification, weighted))
                     |> Seq.toList
 
                 baselineDefault.Applied <- weightedDefault
 
-                if not (obj.ReferenceEquals(currentDefault, weightedDefault)) || not classificationChanges.IsEmpty then
+                if not (FontFormatting.sameWeightFormat currentDefault weightedDefault) || not classificationChanges.IsEmpty then
                     applying <- true
 
                     try
@@ -167,8 +180,11 @@ type FontWeightViewListener
                         do! ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync()
 
                         if not view.IsClosed then
+                            // The view-specific map is a per-view wrapper; the category map behind it is what
+                            // all views share, so that is where formats (and their baselines) really live.
+                            let category = view.Options.GetOptionValue(DefaultWpfViewOptions.AppearanceCategory)
                             let controller =
-                                new ViewWeightController(view, formatMapService.GetClassificationFormatMap view, reader)
+                                new ViewWeightController(view, formatMapService.GetClassificationFormatMap category, reader)
 
                             view.Closed.Add(fun _ -> (controller :> IDisposable).Dispose())
                     } :> Task)
