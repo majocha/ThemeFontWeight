@@ -7,6 +7,12 @@ Weight** under All Settings. Both controls are native Unified Settings dropdowns
 not a classic property-grid options page. Settings persist in Visual Studio and
 changes apply to open document editors without a restart.
 
+Both font-weight settings participate in Visual Studio settings synchronization.
+Install the extension on each machine, sign in with the same personalization
+account, and enable **Synchronize settings across devices and installs on this
+machine** under **Tools > Options > Environment > Accounts**. The **Sync** button
+in the modern settings window can trigger synchronization manually.
+
 Both settings initially use Normal. Available weights range from Thin to Black.
 The selected weight is a **relative shift** from Normal (400), applied to the
 original editor and classification weights. For example, Light (300) changes
@@ -74,6 +80,9 @@ does **not** deploy an extension.
 enum values, defaults, labels, and descriptions. `ProvideSettingsManifest` on an
 F# `AsyncPackage` generates the manifest registration automatically at build
 time. The settings UI does not require loading the package or opening a document.
+Each setting declares `migration.roamingOnly` to connect Unified Settings to
+Visual Studio's roaming store without introducing a legacy settings location
+or a separate extension-managed store.
 
 An F# MEF `IWpfTextViewCreationListener` acquires the native Unified Settings
 service asynchronously. It reads effective values through `ISettingsReader`

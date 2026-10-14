@@ -10,6 +10,7 @@
     "environment.themeFontWeight.lightTheme": {
       "type": "string",
       "default": "normal",
+      "migration": { "roamingOnly": true },
       "enum": [ "thin", "extraLight", "light", "normal", "medium", "semiBold", "bold", "extraBold", "black" ],
       "enumItemLabels": [ "Thin", "Extra Light", "Light", "Normal", "Medium", "Semi Bold", "Bold", "Extra Bold", "Black" ],
       "title": "Light theme font weight",
@@ -20,6 +21,7 @@
     "environment.themeFontWeight.darkTheme": {
       "type": "string",
       "default": "normal",
+      "migration": { "roamingOnly": true },
       "enum": [ "thin", "extraLight", "light", "normal", "medium", "semiBold", "bold", "extraBold", "black" ],
       "enumItemLabels": [ "Thin", "Extra Light", "Light", "Normal", "Medium", "Semi Bold", "Bold", "Extra Bold", "Black" ],
       "title": "Dark theme font weight",

@@ -44,6 +44,7 @@ for moniker in [ Policy.LightSetting; Policy.DarkSetting ] do
     check $"{moniker} matches all supported weights" (values = (Policy.weights |> List.map fst))
     check $"{moniker} has a label for every weight" (setting.GetProperty("enumItemLabels").GetArrayLength() = values.Length)
     check $"{moniker} default preserves normal text" (setting.GetProperty("default").GetString() = "normal")
+    check $"{moniker} participates in Visual Studio settings sync" (setting.GetProperty("migration").GetProperty("roamingOnly").GetBoolean())
     check $"{moniker} has no visibility gate" (not (setting.TryGetProperty("visibleWhen") |> fst))
 
 registration.Dispose()
