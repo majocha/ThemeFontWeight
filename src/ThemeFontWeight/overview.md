@@ -1,10 +1,8 @@
 # Theme Font Weight
 
-Set different code editor font weights for light themes and dark themes. Written entirely in F#.
-
-Text on a dark background can look heavier than the same text on a light background. With this
-extension, you can use a lighter weight in dark themes and a normal weight in light themes, or
-the opposite. When you change the theme, the editor uses the weight for that theme.
+The default Visual Studio editor font is too heavy, especially in dark themes. This extension
+makes the editor text lighter. You set one weight for light themes and one for dark themes.
+Written entirely in F#.
 
 ## Settings
 

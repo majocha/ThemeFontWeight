@@ -1,36 +1,15 @@
 # Theme Font Weight
 
-A Visual Studio VSIX written entirely in F#. Choose independent **code editor
-font weights** for light and dark themes in the modern **Tools > Options**
-window. Search for **Theme Font Weight**, or browse **Environment > Theme Font
-Weight** under All Settings. Both controls are native Unified Settings dropdowns,
-not a classic property-grid options page. Settings persist in Visual Studio and
-changes apply to open document editors without a restart.
+The default Visual Studio editor font is too heavy, especially in dark themes.
+This extension makes the editor text lighter. You set one weight for light
+themes and one for dark themes. Written entirely in F#.
 
-Both font-weight settings participate in Visual Studio settings synchronization.
-Install the extension on each machine, sign in with the same personalization
-account, and enable **Synchronize settings across devices and installs on this
-machine** under **Tools > Options > Environment > Accounts**. The **Sync** button
-in the modern settings window can trigger synchronization manually.
+Go to **Tools > Options > Environment > Theme Font Weight**. Changes apply
+immediately. The settings sync to your other Visual Studio installations.
 
-Both settings initially use Normal. Available weights range from Thin to Black.
-The selected weight is a **relative shift** from Normal (400), applied to the
-original editor and classification weights. For example, Light (300) changes
-regular text from 400 to 300 and bold text from 700 to 600. Thin (100) changes
-regular text to 100 and bold text to 400. Custom classification weights shift
-by the same amount, clamped to 100-900; distinctions may converge at those limits.
-Normal restores the original weights.
-
-Font family, size, colors, italic styles, underlines, and other classification
-formatting remain unchanged. Updates use original formatting baselines, not
-previously adjusted weights, so changing settings repeatedly cannot compound
-the shift. The
-selected font must support the desired weight; WPF may choose the nearest face
-or synthesize a weight.
-
-The brightness of the themed tool-window background determines light versus
-dark. This handles custom and high-contrast themes rather than hard-coding theme
-IDs.
+The weight is a shift from Normal (400). For example, Light (300) changes
+regular text to 300 and bold text to 600, so bold text stays bold. The
+extension does not change the font family, size or colors.
 
 ## Build and install
 
