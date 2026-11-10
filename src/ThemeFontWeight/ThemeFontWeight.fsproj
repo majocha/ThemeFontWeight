@@ -17,7 +17,6 @@
     <StartArguments>/RootSuffix Exp /Log</StartArguments>
     <TargetVSVersion>18.0</TargetVSVersion>
     <VSSDKTargetPlatformRegRootSuffix>Exp</VSSDKTargetPlatformRegRootSuffix>
-    <Version>0.2.0</Version>
     <Description>Independent code editor font weights for light and dark Visual Studio themes.</Description>
   </PropertyGroup>
   <ItemGroup>
@@ -41,9 +40,20 @@
     <Content Include="registration.json">
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
+    <Content Include="..\..\LICENSE" Link="LICENSE">
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
+    <Content Include="Resources\icon.png">
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
+    <!-- Marketplace page and listing, read by Publish-Vsix.ps1. They are not in the VSIX. -->
+    <None Include="publishManifest.json" />
+    <None Include="overview.md" />
   </ItemGroup>
   <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
   <Import Project="$(VSToolsPath)\VSSDK\Microsoft.VsSDK.targets" />
+  <!-- The manifest's Identity Version comes from this target (Directory.Build.targets). -->
+  <Target Name="GetVsixVersion" DependsOnTargets="SetGitVersion" Returns="$(Version)" />
   <!-- VSSDK build tools unconditionally declare the CSharp capability, which makes VS use the C# language service for this F# project. -->
   <ItemGroup>
     <ProjectCapability Remove="CSharp" />

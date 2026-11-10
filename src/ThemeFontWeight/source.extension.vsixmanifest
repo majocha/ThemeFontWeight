@@ -1,9 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
   <Metadata>
-    <Identity Id="ThemeFontWeight.89a14773-bca2-4e64-bf7e-042c93a72c09" Version="0.2.0" Language="en-US" Publisher="ThemeFontWeight" />
+    <Identity Id="ThemeFontWeight.89a14773-bca2-4e64-bf7e-042c93a72c09" Version="|%CurrentProject%;GetVsixVersion|" Language="en-US" Publisher="Jakub Majocha" />
     <DisplayName>Theme Font Weight</DisplayName>
     <Description xml:space="preserve">Set independent code editor font weights for light and dark Visual Studio themes. Written entirely in F#.</Description>
+    <MoreInfo>https://github.com/majocha/ThemeFontWeight</MoreInfo>
+    <License>LICENSE</License>
+    <Icon>Resources\icon.png</Icon>
+    <PreviewImage>Resources\icon.png</PreviewImage>
+    <Tags>font;font weight;editor;theme;dark theme;light theme;F#</Tags>
+    <Preview>true</Preview>
   </Metadata>
   <Installation>
     <InstallationTarget Id="Microsoft.VisualStudio.Community" Version="[18.0,19.0)">

@@ -34,7 +34,7 @@ IDs.
 
 ## Build and install
 
-Requires Windows and the .NET 10 SDK. Targets .NET Framework 4.8 (the in-process
+Requires Windows and the .NET 11 SDK. Targets .NET Framework 4.8 (the in-process
 VS host) and **Visual Studio 2026**, including **Insiders**, on x64. The current
 public VS SDK and VSSDK 18 build tools generate the VSIX and package registration
 directly from the F# assembly. No C# bridge or source generator is used.
@@ -45,11 +45,29 @@ dotnet run --project .\tests\ThemeFontWeight.Tests -c Release
 .\tests\ThemeFontWeight.Formatting.Tests\bin\Release\net48\ThemeFontWeight.Formatting.Tests.exe
 ```
 
+Versions are `Major.Minor.Commits`: `VersionMajorMinor` in `Directory.Build.props` (set by hand),
+then the number of commits to HEAD (`Directory.Build.targets`). The VSIX and the file versions use
+it; assembly versions stay at `Major.Minor.0.0`. Pass `-p:GitHeight=<n>` to set the last part.
+
 Install `src\ThemeFontWeight\bin\Release\net48\ThemeFontWeight.vsix` using the
 VSIX installer, then restart Visual Studio. Uninstall through **Extensions >
 Manage Extensions** to return to Visual Studio's normal font-weight behavior.
 Select your Insiders installation in the installer if you have multiple VS
 instances.
+
+## Publish
+
+To publish to the Visual Studio Marketplace, commit all changes first. Then run:
+
+```powershell
+$env:VS_MARKETPLACE_PAT = '<token>'
+.\Publish-Vsix.ps1
+```
+
+The token is an Azure DevOps personal access token with the **Marketplace (Manage)** scope and
+**All accessible organizations**. The listing is in `src\ThemeFontWeight\publishManifest.json`,
+and the Marketplace page is `overview.md` in the same folder. The Marketplace does not accept a
+version again, so each upload needs a new commit.
 
 ## Experimental instance and debugging
 
@@ -112,3 +130,7 @@ service marker requests that service without referencing internal assemblies.
 - [Effective values and change subscriptions (`ISettingsReader`)](https://learn.microsoft.com/dotnet/api/microsoft.visualstudio.utilities.unifiedsettings.isettingsreader)
 - [Production Unified Settings registration in Roslyn/Razor](https://github.com/dotnet/roslyn/blob/main/src/Razor/src/Razor/src/Microsoft.VisualStudio.RazorExtension/UnifiedSettings/razor.registration.json)
 - [VSSDK-compatible modern extensibility and in-process APIs](https://learn.microsoft.com/visualstudio/extensibility/visualstudio.extensibility/get-started/in-proc-extensions)
+
+## License
+
+[MIT](LICENSE).

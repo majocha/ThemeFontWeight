@@ -1,0 +1,13 @@
+{
+  "$schema": "https://www.schemastore.org/vsix-publish.json",
+  "categories": [ "coding", "theme" ],
+  "identity": {
+    "internalName": "ThemeFontWeight"
+  },
+  "overview": "overview.md",
+  "priceCategory": "free",
+  "publisher": "majocha",
+  "private": false,
+  "qna": true,
+  "repo": "https://github.com/majocha/ThemeFontWeight"
+}
