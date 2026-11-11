@@ -46,7 +46,7 @@ else {
 # with the "Visual Studio extension development" workload.
 $publisher = $null
 [xml] $project = Get-Content (Join-Path $vsixDir 'ThemeFontWeight.fsproj')
-$buildTools = $project.Project.ItemGroup.PackageReference | Where-Object Include -eq 'Microsoft.VSSDK.BuildTools'
+$buildTools = $project.SelectSingleNode("//PackageReference[@Include='Microsoft.VSSDK.BuildTools']")
 $packages = (& dotnet nuget locals global-packages --list) -replace '^global-packages:\s*', ''
 if ($buildTools -and $packages) {
     $candidate = Join-Path $packages "microsoft.vssdk.buildtools\$($buildTools.Version)\tools\VSSDK\bin\VsixPublisher.exe"
