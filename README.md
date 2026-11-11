@@ -38,7 +38,24 @@ instances.
 
 ## Publish
 
-To publish to the Visual Studio Marketplace, commit all changes first. Then run:
+The GitHub workflow `.github/workflows/build.yml` builds and tests each push and pull request.
+Each workflow run keeps the VSIX as an artifact.
+
+- **Open VSIX Gallery**: each push to `main` uploads the VSIX to the
+  [Open VSIX Gallery](https://www.vsixgallery.com/extension/ThemeFontWeight.89a14773-bca2-4e64-bf7e-042c93a72c09).
+  This gives nightly builds. No account or token is necessary.
+- **Visual Studio Marketplace**: put `[release]` in the commit message, or start the workflow
+  manually. The workflow then publishes to the Marketplace and makes a GitHub release with
+  the tag `v<version>`. The repository secret `VS_MARKETPLACE_PAT` must contain the token (see below).
+
+To get the nightly builds in Visual Studio:
+
+1. Select **Tools > Options > Environment > Extensions**.
+2. Add an additional extension gallery with this URL:
+   `https://www.vsixgallery.com/feed/extension/ThemeFontWeight.89a14773-bca2-4e64-bf7e-042c93a72c09`
+3. Find the extension in **Extensions > Manage Extensions** in that gallery.
+
+To publish to the Visual Studio Marketplace from your computer, commit all changes first. Then run:
 
 ```powershell
 $env:VS_MARKETPLACE_PAT = '<token>'
