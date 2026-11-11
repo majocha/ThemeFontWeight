@@ -4,6 +4,10 @@ The default Visual Studio editor font is too heavy, especially in dark themes.
 This extension allows to make the editor text lighter. You set one weight for light
 themes and one for dark themes. Written entirely in F#.
 
+| Before | After |
+|---|---|
+| ![Editor text with the default weight](https://raw.githubusercontent.com/majocha/ThemeFontWeight/main/art/before.png) | ![Editor text with a lighter weight](https://raw.githubusercontent.com/majocha/ThemeFontWeight/main/art/after.png) |
+
 You need a variable weight font like JetBrains Mono.
 
 Go to **Tools > Options > Environment > Theme Font Weight**. Changes apply

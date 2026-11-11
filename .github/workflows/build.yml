@@ -87,6 +87,8 @@ jobs:
         uses: timheuer/openvsixpublish@v1
         with:
           vsix-file: artifact/ThemeFontWeight.vsix
+          # Show the Marketplace overview instead of README.md (path is relative to the repo, per branch).
+          readme: ${{ github.ref_name }}/src/ThemeFontWeight/overview.md
 
       - name: Publish to Visual Studio Marketplace
         if: env.RELEASE == 'true'
